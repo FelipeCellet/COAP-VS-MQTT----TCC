@@ -7,19 +7,19 @@ if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # === IP do ESP32 (ajuste conforme necessário) ===
-esp32_ip = "192.168.3.131"  # <-- substitua pelo IP do seu ESP32 192.168.3.131
+esp32_ip = "192.168.3.131"  
 
-# === Função para ler temperatura e umidade ===
+# === Função para ler temperatura e umidade ===a
 async def test_get_temperature():
     protocol = await Context.create_client_context()
     request = Message(code=GET, uri=f'coap://{esp32_ip}/current/measure')
 
     try:
         response = await protocol.request(request).response
-        print("\n📡 Resposta do ESP32 (Temperatura/Umidade):")
+        print("\n Resposta do ESP32 (Temperatura/Umidade):")
         print(response.payload.decode())
     except Exception as e:
-        print("❌ Erro ao solicitar dados:", e)
+        print(" Erro ao solicitar dados:", e)
 
 # === Função para enviar cor RGB ===
 async def test_set_led_color(r, g, b):
@@ -32,7 +32,7 @@ async def test_set_led_color(r, g, b):
         print("\n💡 Resposta do ESP32 (Controle LED):")
         print(response.payload.decode())
     except Exception as e:
-        print("❌ Erro ao enviar comando RGB:", e)
+        print(" Erro ao enviar comando RGB:", e)
 
 # === Menu principal ===
 def main_menu():
@@ -53,14 +53,14 @@ def main_menu():
                 b = int(input("Valor de B (0-1023): "))
                 asyncio.run(test_set_led_color(r, g, b))
             except ValueError:
-                print("❌ Entrada inválida. Digite números inteiros de 0 a 1023.")
+                print(" Entrada inválida. Digite números inteiros de 0 a 1023.")
 
         elif escolha == "3":
             print("Encerrando...")
             break
 
         else:
-            print("❌ Opção inválida. Tente novamente.")
+            print(" Opção inválida. Tente novamente.")
 
 # === Execução ===
 if __name__ == "__main__":
