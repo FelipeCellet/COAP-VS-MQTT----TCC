@@ -7,7 +7,7 @@ if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # === IP do ESP32 (ajuste conforme necessário) ===
-esp32_ip = "192.168.3.131"  # <-- substitua pelo IP do seu ESP32
+esp32_ip = "192.168.3.131"  # <-- substitua pelo IP do seu ESP32 192.168.3.131
 
 # === Função para ler temperatura e umidade ===
 async def test_get_temperature():
