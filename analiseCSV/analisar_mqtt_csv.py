@@ -1,60 +1,50 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 
-# === Caminho do arquivo CSV exportado do Wireshark ===
-csv_path = "mqtt30min.csv"  # Altere se necessário
+# === 1. Carregar os arquivos CSV ===
+mqtt_csv = "mqtt30min.csv"
+coap_csv = "coap30minantigo.csv"
 
-# === 1. Carregar o CSV ===
-df = pd.read_csv(csv_path)
+df_mqtt = pd.read_csv(mqtt_csv)
+df_coap = pd.read_csv(coap_csv)
 
-# === 2. Filtrar apenas mensagens MQTT do tipo Publish ===
-df_publish = df[df["Info"].str.contains("Publish Message", na=False)].copy()
+# === 2. Filtrar apenas mensagens relevantes ===
+df_mqtt_pub = df_mqtt[df_mqtt["Info"].str.contains("Publish Message", na=False)].copy()
+df_coap_post = df_coap[df_coap["Info"].str.contains("POST", na=False)].copy()
 
-# === 3. Calcular intervalo de tempo entre mensagens consecutivas ===
-df_publish["Delta_t"] = df_publish["Time"].diff()
+# === 3. Calcular intervalo de tempo entre mensagens ===
+df_mqtt_pub["Delta_t"] = df_mqtt_pub["Time"].diff()
+df_coap_post["Delta_t"] = df_coap_post["Time"].diff()
 
-# === 4. Limpar dados nulos do primeiro Delta_t ===
-df_publish_clean = df_publish.dropna(subset=["Delta_t"]).copy()
+# === 4. Calcular métricas para MQTT ===
+tempo_total_mqtt = df_mqtt_pub["Time"].iloc[-1] - df_mqtt_pub["Time"].iloc[0]
+qtd_mqtt = len(df_mqtt_pub)
+pacotes_por_segundo_mqtt = qtd_mqtt / tempo_total_mqtt
+media_tempo_mqtt = df_mqtt_pub["Delta_t"].mean()
+desvio_tempo_mqtt = df_mqtt_pub["Delta_t"].std()
+media_tamanho_mqtt = df_mqtt_pub["Length"].mean()
 
-# === 5. Calcular estatísticas principais ===
-media_intervalo = df_publish_clean["Delta_t"].mean()
-desvio_intervalo = df_publish_clean["Delta_t"].std()
-media_tamanho = df_publish_clean["Length"].mean()
+# === 5. Calcular métricas para CoAP ===
+tempo_total_coap = df_coap_post["Time"].iloc[-1] - df_coap_post["Time"].iloc[0]
+qtd_coap = len(df_coap_post)
+pacotes_por_segundo_coap = qtd_coap / tempo_total_coap
+media_tempo_coap = df_coap_post["Delta_t"].mean()
+desvio_tempo_coap = df_coap_post["Delta_t"].std()
+media_tamanho_coap = df_coap_post["Length"].mean()
 
-print("=== Estatísticas MQTT Publish ===")
-print(f"📊 Média do tempo entre mensagens (Δt): {media_intervalo:.2f} s")
-print(f"📉 Desvio padrão do tempo (Δt): {desvio_intervalo:.2f} s")
-print(f"📦 Tamanho médio dos pacotes: {media_tamanho:.0f} bytes")
+# === 5.5 Verificar se o tempo total de captura foi igual ===
+print("\n⏱️ Duração total da captura:")
+print(f"MQTT: {tempo_total_mqtt:.2f} segundos")
+print(f"CoAP: {tempo_total_coap:.2f} segundos")
 
-# === 6. Gráfico: Intervalo entre mensagens (Δt) ===
-plt.figure(figsize=(10, 4))
-plt.plot(df_publish_clean["Time"], df_publish_clean["Delta_t"], marker='o', linestyle='-', color='tab:blue')
-plt.title("Intervalo entre mensagens MQTT Publish (Δt)")
-plt.xlabel("Tempo absoluto (s)")
-plt.ylabel("Intervalo Δt (s)")
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("grafico_mqtt_intervalo.png")
+if abs(tempo_total_mqtt - tempo_total_coap) < 1:
+    print("✅ Os tempos de captura são praticamente iguais.")
+else:
+    print("⚠️ Diferença detectada nos tempos de captura! Pode afetar a comparação.")
 
-# === 7. Gráfico: Tamanho dos pacotes ao longo do tempo ===
-plt.figure(figsize=(10, 4))
-plt.plot(df_publish_clean["Time"], df_publish_clean["Length"], marker='s', linestyle='-', color='tab:green')
-plt.title("Tamanho dos pacotes MQTT Publish ao longo do tempo")
-plt.xlabel("Tempo absoluto (s)")
-plt.ylabel("Tamanho (bytes)")
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("grafico_mqtt_tamanho.png")
 
-# === 8. Gráfico: Boxplot do tamanho dos pacotes ===
-plt.figure(figsize=(4, 6))
-plt.boxplot(df_publish_clean["Length"])
-plt.title("Boxplot do tamanho dos pacotes MQTT Publish")
-plt.ylabel("Tamanho (bytes)")
-plt.tight_layout()
-plt.savefig("grafico_mqtt_boxplot.png")
-
-# === 9. (Opcional) Salvar dados limpos em CSV ===
-df_publish_clean.to_csv("mqtt_publish_analise_pronta.csv", index=False)
-
-print("\n✅ Análise finalizada. Gráficos e CSV salvos com sucesso!")
+# === 6. Exibir os resultados comparativos ===
+print("\n📊 Métricas Comparativas entre MQTT e CoAP:")
+print(f"{'Protocolo':<10} {'Qtd Pacotes':>12} {'Pacotes/s':>12} {'Tempo Médio (s)':>18} {'Desvio Padrão (s)':>20} {'Tamanho Médio (bytes)':>26}")
+print("-" * 100)
+print(f"{'MQTT':<10} {qtd_mqtt:>12} {pacotes_por_segundo_mqtt:>12.3f} {media_tempo_mqtt:>18.4f} {desvio_tempo_mqtt:>20.4f} {media_tamanho_mqtt:>26.1f}")
+print(f"{'CoAP':<10} {qtd_coap:>12} {pacotes_por_segundo_coap:>12.3f} {media_tempo_coap:>18.4f} {desvio_tempo_coap:>20.4f} {media_tamanho_coap:>26.1f}")

@@ -104,6 +104,37 @@ Capturamos pacotes das mensagens:
 
 ---
 
+---
+
+## 📈 Resultados Experimentais
+
+As capturas foram realizadas por 30 minutos usando o Wireshark, com envio periódico de mensagens a cada 5 segundos pelo ESP32. Abaixo estão os dados extraídos e analisados com Python:
+
+### ⏱️ Duração da Captura
+
+| Protocolo | Tempo Total (s) |
+|-----------|-----------------|
+| MQTT      | 1799.65         |
+| CoAP      | 1795.19         |
+
+> ⚠️ A pequena diferença ocorre porque o último pacote CoAP foi registrado antes dos 30 minutos completos. O próximo envio ocorreria após esse tempo, o que justifica a diferença de ~4 segundos. A validade da comparação permanece, já que ambos os conjuntos têm praticamente a mesma quantidade de mensagens.
+
+### 📊 Métricas Comparativas
+
+| Protocolo | Qtd. Pacotes | Pacotes/s | Tempo Médio (s) | Desvio Padrão (s) | Tamanho Médio (bytes) |
+|-----------|--------------|-----------|------------------|--------------------|------------------------|
+| MQTT      | 342          | 0.190     | 5.2776           | 0.4082             | 88.0                   |
+| CoAP      | 341          | 0.190     | 5.2800           | 0.0082             | 83.0                   |
+
+> As métricas mostram cadência estável de envio (~5 s) em ambos os protocolos. O MQTT apresentou maior variação entre pacotes, enquanto o CoAP se manteve mais regular. O tamanho médio das mensagens CoAP também foi ligeiramente menor, o que pode favorecer aplicações com limitação de banda ou energia.
+
+> ℹ️ **Nota sobre o MQTT:**  
+> Durante a captura, pacotes de controle do tipo `PINGREQ` e `PINGRESP` (mecanismo de keep-alive do protocolo MQTT) também foram identificados. Esses pacotes foram **ignorados na análise**, pois não carregam dados úteis do sensor e não são equivalentes ao comportamento do CoAP, que não exige esse tipo de verificação periódica por padrão.  
+> Apenas mensagens do tipo `PUBLISH` foram consideradas para cálculo das métricas, garantindo uma comparação justa com os `POST` do CoAP.
+
+
+
+
 ## Comparativo MQTT x CoAP
 
 | Critério                    | MQTT                                | CoAP                               |
